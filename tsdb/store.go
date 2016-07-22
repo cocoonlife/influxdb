@@ -384,6 +384,11 @@ func (s *Store) ShardIteratorCreator(id uint64) influxql.IteratorCreator {
 	return &shardIteratorCreator{sh: sh}
 }
 
+// MetaIteratorCreator returns an iterator creator for meta commands.
+func (s *Store) MetaIteratorCreator() (influxql.IteratorCreator, error) {
+	return &metaIteratorCreator{s: s}, nil
+}
+
 // DeleteDatabase will close all shards associated with a database and remove the directory and files from disk.
 func (s *Store) DeleteDatabase(name string) error {
 	s.mu.RLock()

@@ -1,9 +1,11 @@
 package tsdb
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -1733,6 +1735,61 @@ func (m *Measurement) tagValuesByKeyAndSeriesID(tagKeys []string, ids SeriesIDs)
 	return tagValues
 }
 
+// metaIteratorCreator is an iterator creator for meta commands.
+type metaIteratorCreator struct {
+	s *Store
+}
+
+func (ic *metaIteratorCreator) Close() error { return nil }
+
+func (ic *metaIteratorCreator) CreateIterator(opt influxql.IteratorOptions) (influxql.Iterator, error) {
+	// Only support a single system source.
+	if len(opt.Sources) > 1 {
+		return nil, errors.New("cannot select from multiple system sources")
+	}
+
+	m := opt.Sources[0].(*influxql.Measurement)
+	dbi := ic.s.DatabaseIndex(m.Database)
+	if dbi == nil {
+		return nil, nil
+	}
+
+	switch m.Name {
+	case "_measurements":
+		return NewMeasurementIterator(dbi, opt)
+	case "_tags":
+		return NewTagValuesIterator(dbi, opt)
+	}
+	return nil, nil
+}
+
+func (ic *metaIteratorCreator) FieldDimensions(sources influxql.Sources) (fields map[string]influxql.DataType, dimensions map[string]struct{}, err error) {
+	// Only support a single system source.
+	if len(sources) > 1 {
+		return nil, nil, errors.New("cannot select from multiple system sources")
+	}
+
+	switch m := sources[0].(type) {
+	case *influxql.Measurement:
+		switch m.Name {
+		case "_measurements":
+			return map[string]influxql.DataType{
+				"_name": influxql.String,
+			}, nil, nil
+		case "_tags":
+			return map[string]influxql.DataType{
+				"_tagKey": influxql.String,
+				"value":   influxql.String,
+			}, nil, nil
+		}
+	}
+	return nil, nil, nil
+}
+
+func (ic *metaIteratorCreator) ExpandSources(sources influxql.Sources) (influxql.Sources, error) {
+	return sources, nil
+}
+
 // stringSet represents a set of strings.
 type stringSet map[string]struct{}
 
@@ -1812,4 +1869,211 @@ func MeasurementFromSeriesKey(key string) string {
 	// Ignoring the error because the func returns "missing fields"
 	k, _, _ := models.ParseKey(key)
 	return escape.UnescapeString(k)
+}
+
+// MeasurementIterator represents a string iterator that emits all measurement names in a shard.
+type MeasurementIterator struct {
+	mms Measurements
+}
+
+// NewMeasurementIterator returns a new instance of MeasurementIterator.
+func NewMeasurementIterator(dbi *DatabaseIndex, opt influxql.IteratorOptions) (*MeasurementIterator, error) {
+	itr := &MeasurementIterator{}
+
+	// Retrieve measurements from shard. Filter if condition specified.
+	if opt.Condition == nil {
+		itr.mms = dbi.Measurements()
+	} else {
+		mms, _, err := dbi.measurementsByExpr(opt.Condition)
+		if err != nil {
+			return nil, err
+		}
+		itr.mms = mms
+	}
+
+	// Sort measurements by name.
+	sort.Sort(itr.mms)
+
+	return itr, nil
+}
+
+// Stats returns stats about the points processed.
+func (itr *MeasurementIterator) Stats() influxql.IteratorStats { return influxql.IteratorStats{} }
+
+// Close closes the iterator.
+func (itr *MeasurementIterator) Close() error { return nil }
+
+// Next emits the next measurement name.
+func (itr *MeasurementIterator) Next() (*influxql.FloatPoint, error) {
+	if len(itr.mms) == 0 {
+		return nil, nil
+	}
+	mm := itr.mms[0]
+	itr.mms = itr.mms[1:]
+	return &influxql.FloatPoint{
+		Name: "measurements",
+		Aux:  []interface{}{mm.Name},
+	}, nil
+}
+
+// tagValuesIterator emits key/tag values
+type tagValuesIterator struct {
+	mms Measurements
+	buf struct {
+		mm   *Measurement // current measurement
+		keys []keyValue   // current key/value pairs
+	}
+	filterExpr influxql.Expr
+	point      influxql.FloatPoint // reusable point
+	opt        influxql.IteratorOptions
+}
+
+// NewTagValuesIterator returns a new instance of TagValuesIterator.
+func NewTagValuesIterator(dbi *DatabaseIndex, opt influxql.IteratorOptions) (influxql.Iterator, error) {
+	if opt.Condition == nil {
+		return nil, errors.New("a condition is required")
+	}
+
+	measurementExpr := influxql.CloneExpr(opt.Condition)
+	measurementExpr = influxql.Reduce(influxql.RewriteExpr(measurementExpr, func(e influxql.Expr) influxql.Expr {
+		switch e := e.(type) {
+		case *influxql.BinaryExpr:
+			switch e.Op {
+			case influxql.EQ, influxql.NEQ, influxql.EQREGEX, influxql.NEQREGEX:
+				tag, ok := e.LHS.(*influxql.VarRef)
+				if !ok || tag.Val != "_name" {
+					return nil
+				}
+			}
+		}
+		return e
+	}), nil)
+
+	mms, ok, err := dbi.measurementsByExpr(measurementExpr)
+	if err != nil {
+		return nil, err
+	} else if !ok {
+		mms = dbi.Measurements()
+		sort.Sort(mms)
+	}
+
+	// If there are no measurements, return immediately.
+	if len(mms) == 0 {
+		return &tagValuesIterator{}, nil
+	}
+
+	filterExpr := influxql.CloneExpr(opt.Condition)
+	filterExpr = influxql.Reduce(influxql.RewriteExpr(filterExpr, func(e influxql.Expr) influxql.Expr {
+		switch e := e.(type) {
+		case *influxql.BinaryExpr:
+			switch e.Op {
+			case influxql.EQ, influxql.NEQ, influxql.EQREGEX, influxql.NEQREGEX:
+				tag, ok := e.LHS.(*influxql.VarRef)
+				if !ok || strings.HasPrefix(tag.Val, "_") {
+					return nil
+				}
+			}
+		}
+		return e
+	}), nil)
+
+	return &tagValuesIterator{
+		mms:        mms,
+		filterExpr: filterExpr,
+		point: influxql.FloatPoint{
+			Aux: make([]interface{}, 2),
+		},
+		opt: opt,
+	}, nil
+}
+
+// Stats returns stats about the points processed.
+func (itr *tagValuesIterator) Stats() influxql.IteratorStats { return influxql.IteratorStats{} }
+
+// Close closes the iterator.
+func (itr *tagValuesIterator) Close() error { return nil }
+
+// Next emits the next point in the iterator.
+func (itr *tagValuesIterator) Next() (*influxql.FloatPoint, error) {
+	for {
+		// If there are no more values then move to the next key.
+		if len(itr.buf.keys) == 0 {
+			if len(itr.mms) == 0 {
+				return nil, nil
+			}
+
+			var err error
+			itr.buf.mm = itr.mms[0]
+			itr.buf.keys, err = itr.nextKeys()
+			if err != nil {
+				return nil, err
+			}
+			itr.mms = itr.mms[1:]
+			continue
+		}
+
+		key := itr.buf.keys[0]
+		itr.point.Name = itr.buf.mm.Name
+		itr.point.Aux[0] = key.key
+		itr.point.Aux[1] = key.value
+
+		itr.buf.keys = itr.buf.keys[1:]
+		return &itr.point, nil
+	}
+}
+
+func (itr *tagValuesIterator) nextKeys() ([]keyValue, error) {
+	ids, err := itr.buf.mm.SeriesIDsAllOrByExpr(itr.filterExpr)
+	if err != nil {
+		return nil, err
+	}
+	ss := itr.buf.mm.SeriesByIDSlice(ids)
+
+	// Determine a list of keys from condition.
+	keySet, ok, err := itr.buf.mm.TagKeysByExpr(itr.opt.Condition)
+	if err != nil {
+		return nil, err
+	}
+
+	// Loop over all keys for each series.
+	m := make(map[keyValue]struct{}, len(ss))
+	for _, series := range ss {
+		for key, value := range series.Tags {
+			if !ok {
+				// nop
+			} else if _, exists := keySet[key]; !exists {
+				continue
+			}
+			m[keyValue{key, value}] = struct{}{}
+		}
+	}
+
+	// Return an empty slice if there are no key/value matches.
+	if len(m) == 0 {
+		return []keyValue{}, nil
+	}
+
+	// Sort key/value set.
+	a := make([]keyValue, 0, len(m))
+	for kv := range m {
+		a = append(a, kv)
+	}
+	sort.Sort(keyValues(a))
+	return a, nil
+}
+
+type keyValue struct {
+	key, value string
+}
+
+type keyValues []keyValue
+
+func (a keyValues) Len() int      { return len(a) }
+func (a keyValues) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a keyValues) Less(i, j int) bool {
+	ki, kj := a[i].key, a[j].key
+	if ki == kj {
+		return a[i].value < a[j].value
+	}
+	return ki < kj
 }

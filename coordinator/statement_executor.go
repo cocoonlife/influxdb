@@ -7,7 +7,6 @@ import (
 	"io"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/influxdata/influxdb"
@@ -410,15 +409,6 @@ func (e *StatementExecutor) executeSetPasswordUserStatement(q *influxql.SetPassw
 }
 
 func (e *StatementExecutor) executeSelectStatement(stmt *influxql.SelectStatement, ctx *influxql.ExecutionContext) error {
-	// Handle SHOW TAG VALUES separately so it can be optimized.
-	// https://github.com/influxdata/influxdb/issues/6233
-	if source, ok := stmt.Sources[0].(*influxql.Measurement); ok && source.Name == "_tags" {
-		// Use the optimized version only if we have direct access to the database.
-		if store, ok := e.TSDBStore.(LocalTSDBStore); ok {
-			return e.executeShowTagValues(stmt, ctx, store)
-		}
-	}
-
 	itrs, stmt, err := e.createIterators(stmt, ctx)
 	if err != nil {
 		return err
@@ -517,45 +507,7 @@ func (e *StatementExecutor) executeSelectStatement(stmt *influxql.SelectStatemen
 	return nil
 }
 
-func (e *StatementExecutor) createMeasurementsIterator(stmt *influxql.SelectStatement, index *tsdb.DatabaseIndex) ([]influxql.Iterator, error) {
-	opt := influxql.IteratorOptions{
-		Condition: stmt.Condition,
-		Aux:       []influxql.VarRef{{Val: "name", Type: influxql.String}},
-		Limit:     stmt.Limit,
-		Offset:    stmt.Offset,
-	}
-
-	var input influxql.Iterator
-	input, err := tsdb.NewMeasurementIterator(index, opt)
-	if err != nil {
-		return nil, err
-	}
-
-	// Apply limit & offset.
-	if opt.Limit > 0 || opt.Offset > 0 {
-		input = influxql.NewLimitIterator(input, opt)
-	}
-
-	aitr := influxql.NewAuxIterator(input, opt)
-	itr := aitr.Iterator("name", influxql.String)
-	aitr.Background()
-	return []influxql.Iterator{itr}, nil
-}
-
 func (e *StatementExecutor) createIterators(stmt *influxql.SelectStatement, ctx *influxql.ExecutionContext) ([]influxql.Iterator, *influxql.SelectStatement, error) {
-	// Handle SHOW MEASUREMENTS at the database level instead of delegating it to the shards.
-	if source, ok := stmt.Sources[0].(*influxql.Measurement); ok && source.Name == "_measurements" {
-		// Use the optimized version only if we have direct access to the database.
-		if store, ok := e.TSDBStore.(LocalTSDBStore); ok {
-			index := store.DatabaseIndex(source.Database)
-			if index == nil {
-				return nil, stmt, nil
-			}
-			itrs, err := e.createMeasurementsIterator(stmt, index)
-			return itrs, stmt, err
-		}
-	}
-
 	// It is important to "stamp" this time so that everywhere we evaluate `now()` in the statement is EXACTLY the same `now`
 	now := time.Now().UTC()
 	opt := influxql.SelectOptions{
@@ -654,136 +606,22 @@ func (e *StatementExecutor) createIterators(stmt *influxql.SelectStatement, ctx 
 
 // iteratorCreator returns a new instance of IteratorCreator based on stmt.
 func (e *StatementExecutor) iteratorCreator(stmt *influxql.SelectStatement, opt *influxql.SelectOptions) (influxql.IteratorCreator, error) {
+	if stmt.Sources.HasSystemSource() {
+		switch m := stmt.Sources[0].(type) {
+		case *influxql.Measurement:
+			switch m.Name {
+			case "_measurements", "_tags":
+				return e.TSDBStore.MetaIteratorCreator(opt)
+			}
+		}
+	}
+
 	// Retrieve a list of shard IDs.
 	shards, err := e.MetaClient.ShardsByTimeRange(stmt.Sources, opt.MinTime, opt.MaxTime)
 	if err != nil {
 		return nil, err
 	}
 	return e.TSDBStore.IteratorCreator(shards, opt)
-}
-
-func (e *StatementExecutor) executeShowTagValues(stmt *influxql.SelectStatement, ctx *influxql.ExecutionContext, store LocalTSDBStore) error {
-	if stmt.Condition == nil {
-		return errors.New("a condition is required")
-	}
-
-	source := stmt.Sources[0].(*influxql.Measurement)
-	index := store.DatabaseIndex(source.Database)
-	if index == nil {
-		ctx.Results <- &influxql.Result{StatementID: ctx.StatementID, Series: make([]*models.Row, 0)}
-		return nil
-	}
-
-	measurementExpr := influxql.CloneExpr(stmt.Condition)
-	measurementExpr = influxql.Reduce(influxql.RewriteExpr(measurementExpr, func(e influxql.Expr) influxql.Expr {
-		switch e := e.(type) {
-		case *influxql.BinaryExpr:
-			switch e.Op {
-			case influxql.EQ, influxql.NEQ, influxql.EQREGEX, influxql.NEQREGEX:
-				tag, ok := e.LHS.(*influxql.VarRef)
-				if !ok || tag.Val != "_name" {
-					return nil
-				}
-			}
-		}
-		return e
-	}), nil)
-
-	mms, ok, err := index.MeasurementsByExpr(measurementExpr)
-	if err != nil {
-		return err
-	} else if !ok {
-		mms = index.Measurements()
-		sort.Sort(mms)
-	}
-
-	// If there are no measurements, return immediately.
-	if len(mms) == 0 {
-		ctx.Results <- &influxql.Result{StatementID: ctx.StatementID, Series: make([]*models.Row, 0)}
-		return nil
-	}
-
-	filterExpr := influxql.CloneExpr(stmt.Condition)
-	filterExpr = influxql.Reduce(influxql.RewriteExpr(filterExpr, func(e influxql.Expr) influxql.Expr {
-		switch e := e.(type) {
-		case *influxql.BinaryExpr:
-			switch e.Op {
-			case influxql.EQ, influxql.NEQ, influxql.EQREGEX, influxql.NEQREGEX:
-				tag, ok := e.LHS.(*influxql.VarRef)
-				if !ok || strings.HasPrefix(tag.Val, "_") {
-					return nil
-				}
-			}
-		}
-		return e
-	}), nil)
-
-	var emitted bool
-	columns := stmt.ColumnNames()
-	for _, mm := range mms {
-		ids, err := mm.SeriesIDsAllOrByExpr(filterExpr)
-		if err != nil {
-			return err
-		}
-		ss := mm.SeriesByIDSlice(ids)
-
-		// Determine a list of keys from condition.
-		keySet, ok, err := mm.TagKeysByExpr(stmt.Condition)
-		if err != nil {
-			return err
-		}
-
-		// Loop over all keys for each series.
-		m := make(map[keyValue]struct{}, len(ss))
-		for _, series := range ss {
-			for key, value := range series.Tags {
-				if !ok {
-					// nop
-				} else if _, exists := keySet[key]; !exists {
-					continue
-				}
-				m[keyValue{key, value}] = struct{}{}
-			}
-		}
-
-		// Move to next series if no key/values match.
-		if len(m) == 0 {
-			continue
-		}
-
-		// Sort key/value set.
-		a := make([]keyValue, 0, len(m))
-		for kv := range m {
-			a = append(a, kv)
-		}
-		sort.Sort(keyValues(a))
-
-		// Convert to result values.
-		slab := make([]interface{}, len(a)*2)
-		values := make([][]interface{}, len(a))
-		for i, elem := range a {
-			slab[i*2], slab[i*2+1] = elem.key, elem.value
-			values[i] = slab[i*2 : i*2+2]
-		}
-
-		// Send result to client.
-		ctx.Results <- &influxql.Result{
-			StatementID: ctx.StatementID,
-			Series: []*models.Row{&models.Row{
-				Name:    mm.Name,
-				Columns: columns,
-				Values:  values,
-			}},
-		}
-		emitted = true
-	}
-
-	// Always emit at least one row.
-	if !emitted {
-		ctx.Results <- &influxql.Result{StatementID: ctx.StatementID, Series: make([]*models.Row, 0)}
-	}
-
-	return nil
 }
 
 func (e *StatementExecutor) executeShowContinuousQueriesStatement(stmt *influxql.ShowContinuousQueriesStatement) (models.Rows, error) {
@@ -1198,6 +1036,7 @@ type TSDBStore interface {
 	DeleteSeries(database string, sources []influxql.Source, condition influxql.Expr) error
 	DeleteShard(id uint64) error
 	IteratorCreator(shards []meta.ShardInfo, opt *influxql.SelectOptions) (influxql.IteratorCreator, error)
+	MetaIteratorCreator(opt *influxql.SelectOptions) (influxql.IteratorCreator, error)
 }
 
 type LocalTSDBStore struct {
@@ -1210,6 +1049,10 @@ func (s LocalTSDBStore) IteratorCreator(shards []meta.ShardInfo, opt *influxql.S
 		shardIDs[i] = sh.ID
 	}
 	return s.Store.IteratorCreator(shardIDs, opt)
+}
+
+func (s LocalTSDBStore) MetaIteratorCreator(opt *influxql.SelectOptions) (influxql.IteratorCreator, error) {
+	return s.Store.MetaIteratorCreator()
 }
 
 // ShardIteratorCreator is an interface for creating an IteratorCreator to access a specific shard.
