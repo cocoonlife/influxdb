@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -12,11 +10,13 @@ import (
 
 	"github.com/influxdata/influxdb/influxql"
 	"github.com/influxdata/influxdb/tsdb"
+	"github.com/influxdata/log"
+	"github.com/influxdata/log/handlers/discard"
 )
 
 func cmdInfo(path string) {
 	tstore := tsdb.NewStore(filepath.Join(path, "data"))
-	tstore.Logger = log.New(ioutil.Discard, "", log.LstdFlags)
+	tstore.WithLogger(log.New(discard.Default))
 	tstore.EngineOptions.Config.Dir = filepath.Join(path, "data")
 	tstore.EngineOptions.Config.WALLoggingEnabled = false
 	tstore.EngineOptions.Config.WALDir = filepath.Join(path, "wal")
