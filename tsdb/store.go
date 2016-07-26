@@ -1,4 +1,4 @@
-package tsdb // import "github.com/influxdata/influxdb/tsdb"
+package tsdb // import "github.com/cocoonlife/influxdb/tsdb"
 
 import (
 	"errors"

@@ -1,4 +1,4 @@
-package collectd // import "github.com/influxdata/influxdb/services/collectd"
+package collectd // import "github.com/cocoonlife/influxdb/services/collectd"
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package snapshotter // import "github.com/influxdata/influxdb/services/snapshotter"
+package snapshotter // import "github.com/cocoonlife/influxdb/services/snapshotter"
 
 import (
 	"bytes"

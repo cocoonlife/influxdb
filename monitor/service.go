@@ -1,4 +1,4 @@
-package monitor // import "github.com/influxdata/influxdb/monitor"
+package monitor // import "github.com/cocoonlife/influxdb/monitor"
 
 import (
 	"bytes"

@@ -1,4 +1,4 @@
-package diagnostics // import "github.com/influxdata/influxdb/monitor/diagnostics"
+package diagnostics // import "github.com/cocoonlife/influxdb/monitor/diagnostics"
 
 // Client is the interface modules implement if they register diagnostics with monitor.
 type Client interface {

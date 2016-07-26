@@ -1,4 +1,4 @@
-package admin // import "github.com/influxdata/influxdb/services/admin"
+package admin // import "github.com/cocoonlife/influxdb/services/admin"
 
 import (
 	"crypto/tls"

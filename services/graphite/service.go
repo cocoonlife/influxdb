@@ -1,4 +1,4 @@
-package graphite // import "github.com/influxdata/influxdb/services/graphite"
+package graphite // import "github.com/cocoonlife/influxdb/services/graphite"
 
 import (
 	"bufio"

@@ -1,4 +1,4 @@
-package precreator // import "github.com/influxdata/influxdb/services/precreator"
+package precreator // import "github.com/cocoonlife/influxdb/services/precreator"
 
 import (
 	"io"

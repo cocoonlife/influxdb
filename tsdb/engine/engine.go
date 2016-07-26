@@ -1,4 +1,4 @@
-package engine // import "github.com/influxdata/influxdb/tsdb/engine"
+package engine // import "github.com/cocoonlife/influxdb/tsdb/engine"
 
 import (
 	// Initialize and register tsm1 engine

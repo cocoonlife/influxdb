@@ -1,4 +1,4 @@
-package models // import "github.com/influxdata/influxdb/models"
+package models // import "github.com/cocoonlife/influxdb/models"
 
 import (
 	"bytes"

@@ -1,4 +1,4 @@
-package cli // import "github.com/influxdata/influxdb/cmd/influx/cli"
+package cli // import "github.com/cocoonlife/influxdb/cmd/influx/cli"
 
 import (
 	"bytes"

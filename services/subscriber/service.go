@@ -1,4 +1,4 @@
-package subscriber // import "github.com/influxdata/influxdb/services/subscriber"
+package subscriber // import "github.com/cocoonlife/influxdb/services/subscriber"
 
 import (
 	"errors"

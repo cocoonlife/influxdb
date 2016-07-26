@@ -1,1 +1,1 @@
-package influxdb // import "github.com/influxdata/influxdb"
+package influxdb // import "github.com/cocoonlife/influxdb"

@@ -1,4 +1,4 @@
-package retention // import "github.com/influxdata/influxdb/services/retention"
+package retention // import "github.com/cocoonlife/influxdb/services/retention"
 
 import (
 	"io"
