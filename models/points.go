@@ -1367,8 +1367,8 @@ func (p *point) RoundedString(d time.Duration) string {
 	if p.Time().IsZero() {
 		return fmt.Sprintf("%s %s", p.Key(), string(p.fields))
 	}
-	return fmt.Sprintf("%s %s %d", p.Key(), string(p.fields),
-		p.time.Round(d).UnixNano())
+	t := p.time.Round(d).UnixNano() / d.Nanoseconds()
+	return fmt.Sprintf("%s %s %d", p.Key(), string(p.fields), t)
 }
 
 func (p *point) unmarshalBinary() Fields {
