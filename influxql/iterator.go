@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/influxdata/influxdb/models"
+	"github.com/cocoonlife/influxdb/models"
 
 	"github.com/gogo/protobuf/proto"
-	internal "github.com/influxdata/influxdb/influxql/internal"
+	internal "github.com/cocoonlife/influxdb/influxql/internal"
 )
 
 // ErrUnknownCall is returned when operating on an unknown function call.

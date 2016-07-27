@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/influxdata/influxdb/models"
-	"github.com/influxdata/influxdb/tsdb"
+	"github.com/cocoonlife/influxdb/models"
+	"github.com/cocoonlife/influxdb/tsdb"
 )
 
 // TestBatch_Size ensures that a batcher generates a batch when the size threshold is reached.

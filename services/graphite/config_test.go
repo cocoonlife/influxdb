@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/influxdata/influxdb/services/graphite"
+	"github.com/cocoonlife/influxdb/services/graphite"
 )
 
 func TestConfig_Parse(t *testing.T) {

@@ -14,9 +14,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/influxdata/influxdb"
-	"github.com/influxdata/influxdb/services/meta"
-	"github.com/influxdata/influxdb/tsdb"
+	"github.com/cocoonlife/influxdb"
+	"github.com/cocoonlife/influxdb/services/meta"
+	"github.com/cocoonlife/influxdb/tsdb"
 )
 
 const (

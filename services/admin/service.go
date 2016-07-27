@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	// Register static assets via statik.
-	_ "github.com/influxdata/influxdb/services/admin/statik"
+	_ "github.com/cocoonlife/influxdb/services/admin/statik"
 	"github.com/rakyll/statik/fs"
 )
 

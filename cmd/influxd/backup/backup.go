@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/influxdata/influxdb/services/snapshotter"
-	"github.com/influxdata/influxdb/tcp"
+	"github.com/cocoonlife/influxdb/services/snapshotter"
+	"github.com/cocoonlife/influxdb/tcp"
 )
 
 const (

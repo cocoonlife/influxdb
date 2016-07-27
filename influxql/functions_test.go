@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/influxdata/influxdb/influxql"
+	"github.com/cocoonlife/influxdb/influxql"
 )
 
 func almostEqual(got, exp float64) bool {

@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/influxdata/influxdb/influxql"
-	"github.com/influxdata/influxdb/models"
-	"github.com/influxdata/influxdb/pkg/deep"
-	"github.com/influxdata/influxdb/tsdb"
-	_ "github.com/influxdata/influxdb/tsdb/engine"
+	"github.com/cocoonlife/influxdb/influxql"
+	"github.com/cocoonlife/influxdb/models"
+	"github.com/cocoonlife/influxdb/pkg/deep"
+	"github.com/cocoonlife/influxdb/tsdb"
+	_ "github.com/cocoonlife/influxdb/tsdb/engine"
 )
 
 // DefaultPrecision is the precision used by the MustWritePointsString() function.

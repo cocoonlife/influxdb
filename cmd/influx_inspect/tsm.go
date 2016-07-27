@@ -9,7 +9,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/influxdata/influxdb/tsdb/engine/tsm1"
+	"github.com/cocoonlife/influxdb/tsdb/engine/tsm1"
 )
 
 type tsdmDumpOpts struct {

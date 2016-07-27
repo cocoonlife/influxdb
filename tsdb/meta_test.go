@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/influxdata/influxdb/influxql"
-	"github.com/influxdata/influxdb/tsdb"
+	"github.com/cocoonlife/influxdb/influxql"
+	"github.com/cocoonlife/influxdb/tsdb"
 )
 
 // Test comparing SeriesIDs for equality.

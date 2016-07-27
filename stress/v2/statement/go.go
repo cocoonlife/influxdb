@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/influxdata/influxdb/stress/v2/stress_client"
+	"github.com/cocoonlife/influxdb/stress/v2/stress_client"
 )
 
 // GoStatement is a Statement Implementation to allow other statements to be run concurrently

@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/influxdata/influxdb/models"
+	"github.com/cocoonlife/influxdb/models"
 )
 
 const (

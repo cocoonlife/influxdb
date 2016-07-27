@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/influxdata/influxdb/models"
+	"github.com/cocoonlife/influxdb/models"
 )
 
 // Communes are a method for passing points between InsertStatements and QueryStatements.

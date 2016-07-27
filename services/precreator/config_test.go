@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/influxdata/influxdb/services/precreator"
+	"github.com/cocoonlife/influxdb/services/precreator"
 )
 
 func TestConfig_Parse(t *testing.T) {

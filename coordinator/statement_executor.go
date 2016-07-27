@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/influxdata/influxdb"
-	"github.com/influxdata/influxdb/influxql"
-	"github.com/influxdata/influxdb/models"
-	"github.com/influxdata/influxdb/monitor"
-	"github.com/influxdata/influxdb/services/meta"
-	"github.com/influxdata/influxdb/tsdb"
+	"github.com/cocoonlife/influxdb"
+	"github.com/cocoonlife/influxdb/influxql"
+	"github.com/cocoonlife/influxdb/models"
+	"github.com/cocoonlife/influxdb/monitor"
+	"github.com/cocoonlife/influxdb/services/meta"
+	"github.com/cocoonlife/influxdb/tsdb"
 )
 
 type pointsWriter interface {
@@ -411,7 +411,7 @@ func (e *StatementExecutor) executeSetPasswordUserStatement(q *influxql.SetPassw
 
 func (e *StatementExecutor) executeSelectStatement(stmt *influxql.SelectStatement, ctx *influxql.ExecutionContext) error {
 	// Handle SHOW TAG VALUES separately so it can be optimized.
-	// https://github.com/influxdata/influxdb/issues/6233
+	// https://github.com/cocoonlife/influxdb/issues/6233
 	if source, ok := stmt.Sources[0].(*influxql.Measurement); ok && source.Name == "_tags" {
 		// Use the optimized version only if we have direct access to the database.
 		if store, ok := e.TSDBStore.(LocalTSDBStore); ok {

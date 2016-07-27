@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/influxdata/influxdb/models"
-	"github.com/influxdata/influxdb/services/meta"
-	"github.com/influxdata/influxdb/services/opentsdb"
+	"github.com/cocoonlife/influxdb/models"
+	"github.com/cocoonlife/influxdb/services/meta"
+	"github.com/cocoonlife/influxdb/services/opentsdb"
 )
 
 // Ensure a point can be written via the telnet protocol.

@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/influxdata/influxdb/monitor/diagnostics"
+	"github.com/cocoonlife/influxdb/monitor/diagnostics"
 )
 
 var startTime time.Time

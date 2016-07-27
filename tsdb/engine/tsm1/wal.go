@@ -18,8 +18,8 @@ import (
 	"time"
 
 	"github.com/golang/snappy"
-	"github.com/influxdata/influxdb/models"
-	"github.com/influxdata/influxdb/pkg/limiter"
+	"github.com/cocoonlife/influxdb/models"
+	"github.com/cocoonlife/influxdb/pkg/limiter"
 )
 
 const (

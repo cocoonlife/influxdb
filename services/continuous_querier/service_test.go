@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/influxdata/influxdb/coordinator"
-	"github.com/influxdata/influxdb/influxql"
-	"github.com/influxdata/influxdb/models"
-	"github.com/influxdata/influxdb/services/meta"
+	"github.com/cocoonlife/influxdb/coordinator"
+	"github.com/cocoonlife/influxdb/influxql"
+	"github.com/cocoonlife/influxdb/models"
+	"github.com/cocoonlife/influxdb/services/meta"
 )
 
 var (

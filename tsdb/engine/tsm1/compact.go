@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/influxdata/influxdb/tsdb"
+	"github.com/cocoonlife/influxdb/tsdb"
 )
 
 const maxTSMFileSize = uint32(2048 * 1024 * 1024) // 2GB

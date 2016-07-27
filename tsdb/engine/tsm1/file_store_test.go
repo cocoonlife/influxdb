@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/influxdata/influxdb/tsdb/engine/tsm1"
+	"github.com/cocoonlife/influxdb/tsdb/engine/tsm1"
 )
 
 func TestFileStore_Read(t *testing.T) {

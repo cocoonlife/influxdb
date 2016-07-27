@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/influxdata/influxdb/models"
+	"github.com/cocoonlife/influxdb/models"
 )
 
 // statistics gathered by the httpd package.

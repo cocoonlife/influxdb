@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/influxdata/influxdb/influxql"
-	"github.com/influxdata/influxdb/models"
-	"github.com/influxdata/influxdb/services/httpd"
-	"github.com/influxdata/influxdb/services/meta"
+	"github.com/cocoonlife/influxdb/influxql"
+	"github.com/cocoonlife/influxdb/models"
+	"github.com/cocoonlife/influxdb/services/httpd"
+	"github.com/cocoonlife/influxdb/services/meta"
 )
 
 // Ensure the handler returns results from a query (including nil results).

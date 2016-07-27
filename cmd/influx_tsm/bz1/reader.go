@@ -11,9 +11,9 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/golang/snappy"
-	"github.com/influxdata/influxdb/cmd/influx_tsm/stats"
-	"github.com/influxdata/influxdb/cmd/influx_tsm/tsdb"
-	"github.com/influxdata/influxdb/tsdb/engine/tsm1"
+	"github.com/cocoonlife/influxdb/cmd/influx_tsm/stats"
+	"github.com/cocoonlife/influxdb/cmd/influx_tsm/tsdb"
+	"github.com/cocoonlife/influxdb/tsdb/engine/tsm1"
 )
 
 // DefaultChunkSize is the size of chunks read from the bz1 shard

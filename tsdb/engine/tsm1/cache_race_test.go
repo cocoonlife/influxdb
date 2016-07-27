@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/influxdata/influxdb/tsdb/engine/tsm1"
+	"github.com/cocoonlife/influxdb/tsdb/engine/tsm1"
 )
 
 func TestCheckConcurrentReadsAreSafe(t *testing.T) {

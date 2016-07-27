@@ -1,6 +1,6 @@
 package monitor
 
-import "github.com/influxdata/influxdb/monitor/diagnostics"
+import "github.com/cocoonlife/influxdb/monitor/diagnostics"
 
 // system captures build diagnostics
 type build struct {

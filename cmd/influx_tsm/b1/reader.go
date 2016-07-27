@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/influxdata/influxdb/cmd/influx_tsm/stats"
-	"github.com/influxdata/influxdb/cmd/influx_tsm/tsdb"
-	"github.com/influxdata/influxdb/tsdb/engine/tsm1"
+	"github.com/cocoonlife/influxdb/cmd/influx_tsm/stats"
+	"github.com/cocoonlife/influxdb/cmd/influx_tsm/tsdb"
+	"github.com/cocoonlife/influxdb/tsdb/engine/tsm1"
 )
 
 const DefaultChunkSize int = 1000

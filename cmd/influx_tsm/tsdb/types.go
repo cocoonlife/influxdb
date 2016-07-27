@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"strings"
 
-	"github.com/influxdata/influxdb/cmd/influx_tsm/tsdb/internal"
-	"github.com/influxdata/influxdb/influxql"
+	"github.com/cocoonlife/influxdb/cmd/influx_tsm/tsdb/internal"
+	"github.com/cocoonlife/influxdb/influxql"
 
 	"github.com/gogo/protobuf/proto"
 )

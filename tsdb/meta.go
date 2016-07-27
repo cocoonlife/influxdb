@@ -7,10 +7,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/influxdata/influxdb/influxql"
-	"github.com/influxdata/influxdb/models"
-	"github.com/influxdata/influxdb/pkg/escape"
-	internal "github.com/influxdata/influxdb/tsdb/internal"
+	"github.com/cocoonlife/influxdb/influxql"
+	"github.com/cocoonlife/influxdb/models"
+	"github.com/cocoonlife/influxdb/pkg/escape"
+	internal "github.com/cocoonlife/influxdb/tsdb/internal"
 
 	"github.com/gogo/protobuf/proto"
 )

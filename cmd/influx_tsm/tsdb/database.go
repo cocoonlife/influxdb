@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/influxdata/influxdb/pkg/slices"
+	"github.com/cocoonlife/influxdb/pkg/slices"
 )
 
 // Flags for differentiating between engines

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"testing/quick"
 
-	"github.com/influxdata/influxdb/tsdb/engine/tsm1"
+	"github.com/cocoonlife/influxdb/tsdb/engine/tsm1"
 )
 
 func TestFloatEncoder_Simple(t *testing.T) {

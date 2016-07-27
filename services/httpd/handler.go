@@ -20,13 +20,13 @@ import (
 
 	"github.com/bmizerany/pat"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/influxdata/influxdb"
-	"github.com/influxdata/influxdb/influxql"
-	"github.com/influxdata/influxdb/models"
-	"github.com/influxdata/influxdb/monitor"
-	"github.com/influxdata/influxdb/services/continuous_querier"
-	"github.com/influxdata/influxdb/services/meta"
-	"github.com/influxdata/influxdb/uuid"
+	"github.com/cocoonlife/influxdb"
+	"github.com/cocoonlife/influxdb/influxql"
+	"github.com/cocoonlife/influxdb/models"
+	"github.com/cocoonlife/influxdb/monitor"
+	"github.com/cocoonlife/influxdb/services/continuous_querier"
+	"github.com/cocoonlife/influxdb/services/meta"
+	"github.com/cocoonlife/influxdb/uuid"
 )
 
 const (

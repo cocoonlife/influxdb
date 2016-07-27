@@ -3,7 +3,7 @@ package collectd
 import (
 	"time"
 
-	"github.com/influxdata/influxdb/toml"
+	"github.com/cocoonlife/influxdb/toml"
 )
 
 const (

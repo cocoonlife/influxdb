@@ -7,8 +7,8 @@ import (
 	"os"
 	"runtime/pprof"
 
-	"github.com/influxdata/influxdb/stress"
-	v2 "github.com/influxdata/influxdb/stress/v2"
+	"github.com/cocoonlife/influxdb/stress"
+	v2 "github.com/cocoonlife/influxdb/stress/v2"
 )
 
 var (

@@ -3,8 +3,8 @@ package subscriber
 import (
 	"time"
 
-	"github.com/influxdata/influxdb/client/v2"
-	"github.com/influxdata/influxdb/coordinator"
+	"github.com/cocoonlife/influxdb/client/v2"
+	"github.com/cocoonlife/influxdb/coordinator"
 )
 
 // HTTP supports writing points over HTTP using the line protocol.

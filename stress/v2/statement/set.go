@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/influxdata/influxdb/stress/v2/stress_client"
+	"github.com/cocoonlife/influxdb/stress/v2/stress_client"
 )
 
 // SetStatement set state variables for the test

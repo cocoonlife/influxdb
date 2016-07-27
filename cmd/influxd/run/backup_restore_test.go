@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/influxdata/influxdb/cmd/influxd/backup"
-	"github.com/influxdata/influxdb/cmd/influxd/restore"
+	"github.com/cocoonlife/influxdb/cmd/influxd/backup"
+	"github.com/cocoonlife/influxdb/cmd/influxd/restore"
 )
 
 func TestServer_BackupAndRestore(t *testing.T) {
-	t.Skip("currently fails intermittently.  See issue https://github.com/influxdata/influxdb/issues/6590")
+	t.Skip("currently fails intermittently.  See issue https://github.com/cocoonlife/influxdb/issues/6590")
 	config := NewConfig()
 	config.Data.Engine = "tsm1"
 	config.Data.Dir, _ = ioutil.TempDir("", "data_backup")

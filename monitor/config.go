@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/influxdata/influxdb/toml"
+	"github.com/cocoonlife/influxdb/toml"
 )
 
 const (

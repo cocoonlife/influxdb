@@ -5,7 +5,7 @@ import (
 	"testing"
 	"testing/quick"
 
-	"github.com/influxdata/influxdb/tsdb/engine/tsm1"
+	"github.com/cocoonlife/influxdb/tsdb/engine/tsm1"
 )
 
 func Test_BooleanEncoder_NoValues(t *testing.T) {

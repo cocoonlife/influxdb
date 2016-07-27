@@ -17,8 +17,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/influxdata/influxdb"
-	"github.com/influxdata/influxdb/influxql"
+	"github.com/cocoonlife/influxdb"
+	"github.com/cocoonlife/influxdb/influxql"
 
 	"golang.org/x/crypto/bcrypt"
 )

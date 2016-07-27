@@ -3,7 +3,7 @@ package retention
 import (
 	"time"
 
-	"github.com/influxdata/influxdb/toml"
+	"github.com/cocoonlife/influxdb/toml"
 )
 
 // Config represents the configuration for the retention service.

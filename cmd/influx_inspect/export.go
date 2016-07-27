@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/influxdata/influxdb/models"
-	"github.com/influxdata/influxdb/tsdb/engine/tsm1"
+	"github.com/cocoonlife/influxdb/models"
+	"github.com/cocoonlife/influxdb/tsdb/engine/tsm1"
 )
 
 type cmdExport struct {

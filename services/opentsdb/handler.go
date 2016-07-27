@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/influxdata/influxdb"
-	"github.com/influxdata/influxdb/models"
+	"github.com/cocoonlife/influxdb"
+	"github.com/cocoonlife/influxdb/models"
 )
 
 // Handler is an http.Handler for the service.

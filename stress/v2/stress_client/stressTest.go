@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	influx "github.com/influxdata/influxdb/client/v2"
+	influx "github.com/cocoonlife/influxdb/client/v2"
 )
 
 // NewStressTest creates the backend for the stress test

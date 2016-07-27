@@ -12,7 +12,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/influxdata/influxdb/models"
+	"github.com/cocoonlife/influxdb/models"
 )
 
 // UDPPayloadSize is a reasonable default payload size for UDP packets that
@@ -411,6 +411,7 @@ func (uc *udpclient) Write(bp BatchPoints) error {
 	d, _ = time.ParseDuration("1" + bp.Precision())
 
 	for _, p := range bp.Points() {
+		fmt.Println(p.pt.RoundedString(d))
 		pointstring := p.pt.RoundedString(d) + "\n"
 
 		// Write and reset the buffer if we reach the max size
