@@ -1,6 +1,8 @@
 package client
 
 import (
+	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -414,5 +416,16 @@ func TestBatchPoints_SettersGetters(t *testing.T) {
 	}
 	if bp.WriteConsistency() != "wc2" {
 		t.Errorf("Expected: %s, got %s", bp.WriteConsistency(), "wc2")
+	}
+}
+
+func TestEncodeData(t *testing.T) {
+	data := []byte("some input")
+	key, _ := hex.DecodeString("01234567890123456789012345678901")
+	iv := []byte("abcdefghijklmnop")
+	ciphertext, _ := encodeData(data, key, iv)
+	expected := []byte("IDB\x01abcdefghijklmnop\xa2\x0f\xa4\xecIA\x83!\xdcH\x92W\xebc\xe3g")
+	if bytes.Compare(ciphertext, expected) != 0 {
+		t.Errorf("cipher text does not compare: %v %v", ciphertext, expected)
 	}
 }

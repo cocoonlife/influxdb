@@ -2,10 +2,16 @@ package client // import "github.com/cocoonlife/influxdb/client/v2"
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"crypto/tls"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/crc32"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -13,6 +19,7 @@ import (
 	"time"
 
 	"github.com/cocoonlife/influxdb/models"
+	"github.com/ncw/rclone/crypt/pkcs7"
 )
 
 // UDPPayloadSize is a reasonable default payload size for UDP packets that
@@ -585,4 +592,141 @@ func (c *client) Query(q Query) (*Response, error) {
 			resp.StatusCode)
 	}
 	return &response, nil
+}
+
+// EncUDPConfig is the config data needed to create an encrypted UDP Client
+type EncUDPConfig struct {
+	// Addr should be of the form "host:port"
+	// or "[ipv6-host%zone]:port".
+	Addr string
+
+	// PayloadSize is the maximum size of a UDP client message, optional
+	// Tune this based on your network. Defaults to UDPBufferSize.
+	PayloadSize int
+
+	// Encoding is the encoding type
+	Encoding int
+
+	// Key is the key to encrypt the data with
+	Key []byte
+}
+
+type encudpclient struct {
+	conn        *net.UDPConn
+	payloadSize int
+	encoding    int
+	key         []byte
+}
+
+// NewEncUDPClient returns a client interface for writing to an InfluxDB UDP
+// service with encryption from the given config.
+func NewEncUDPClient(conf EncUDPConfig) (Client, error) {
+	var udpAddr *net.UDPAddr
+	udpAddr, err := net.ResolveUDPAddr("udp", conf.Addr)
+	if err != nil {
+		return nil, err
+	}
+
+	conn, err := net.DialUDP("udp", nil, udpAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	payloadSize := conf.PayloadSize
+	if payloadSize == 0 {
+		payloadSize = UDPPayloadSize
+	}
+
+	// Make room for CRC
+	payloadSize -= 4
+
+	// Make room for IV
+	payloadSize -= 16
+
+	// TODO: Make room for padding
+
+	return &encudpclient{
+		conn:        conn,
+		payloadSize: payloadSize,
+		encoding:    conf.Encoding,
+		key:         conf.Key,
+	}, nil
+}
+
+// Ping will check to see if the server is up with an optional timeout on waiting for leader.
+// Ping returns how long the request took, the version of the server it connected to, and an error if one occurred.
+func (euc *encudpclient) Ping(timeout time.Duration) (time.Duration, string, error) {
+	return 0, "", nil
+}
+
+// Close releases the encudpclient's resources.
+func (euc *encudpclient) Close() error {
+	return euc.conn.Close()
+}
+
+func encodeData(data, key, iv []byte) ([]byte, error) {
+	var b bytes.Buffer
+	csum := crc32.Update(0, crc32.IEEETable, data)
+	err := binary.Write(&b, binary.LittleEndian, csum)
+	if err != nil {
+		return nil, err
+	}
+	_, err = b.Write(data)
+	if err != nil {
+		return nil, err
+	}
+	paddedData := pkcs7.Pad(aes.BlockSize, b.Bytes())
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	header := "IDB\x01"
+	ciphertext := make([]byte, len(header)+aes.BlockSize+len(paddedData))
+	copy(ciphertext, header)
+	copy(ciphertext[len(header):], iv)
+
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext[len(header)+aes.BlockSize:], paddedData)
+	return ciphertext, nil
+}
+
+func (euc *encudpclient) writeData(data []byte) (int, error) {
+	iv := make([]byte, aes.BlockSize)
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return 0, err
+	}
+	ciphertext, err := encodeData(data, euc.key, iv)
+	if err != nil {
+		return 0, err
+	}
+	return euc.conn.Write(ciphertext)
+}
+
+func (euc *encudpclient) Write(bp BatchPoints) error {
+	var b bytes.Buffer
+	var d time.Duration
+	d, _ = time.ParseDuration("1" + bp.Precision())
+
+	for _, p := range bp.Points() {
+		pointstring := p.pt.RoundedString(d) + "\n"
+
+		// Write and reset the buffer if we reach the max size
+		if b.Len()+len(pointstring) >= euc.payloadSize {
+			if _, err := euc.writeData(b.Bytes()); err != nil {
+				return err
+			}
+			b.Reset()
+		}
+
+		if _, err := b.WriteString(pointstring); err != nil {
+			return err
+		}
+	}
+
+	_, err := euc.writeData(b.Bytes())
+	return err
+}
+
+func (euc *encudpclient) Query(q Query) (*Response, error) {
+	return nil, fmt.Errorf("Querying via UDP is not supported")
 }
