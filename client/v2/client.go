@@ -643,7 +643,8 @@ func NewEncUDPClient(conf EncUDPConfig) (Client, error) {
 	// Make room for IV
 	payloadSize -= 16
 
-	// TODO: Make room for padding
+	// Make room for padding
+        payloadSize -= 16
 
 	return &encudpclient{
 		conn:        conn,
